@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PetJoy — Happy Pets, Happy Life</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+/* ─── Reset & Base ─────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ivory:   #FAF8F3;
+  --sand-0:  #F5F0E8;
+  --sand-1:  #EDE5D8;
+  --sand-2:  #DDD0BC;
+  --sand-3:  #C8B89A;
+  --sand-4:  #A89070;
+  --brown:   #6B4C30;
+  --brown-d: #3D2B18;
+  --teal:    #2E8B7A;
+  --teal-l:  #D4EFEB;
+  --teal-d:  #1A5C50;
+  --rust:    #C46A3A;
+  --rust-l:  #F5E0D3;
+  --text:    #2A1F14;
+  --text-2:  #6B5840;
+  --text-3:  #A08B72;
+  --glass-bg: rgba(250,248,243,0.55);
+  --glass-border: rgba(200,184,154,0.35);
+  --shadow-sm: 0 2px 12px rgba(107,76,48,0.08);
+  --shadow-md: 0 8px 32px rgba(107,76,48,0.12);
+  --shadow-lg: 0 20px 60px rgba(107,76,48,0.16);
+  --r-sm: 16px;
+  --r-md: 24px;
+  --r-lg: 32px;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--ivory);
+  color: var(--text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+h1,h2,h3,h4 { font-family: 'Clash Display', sans-serif; }
+
+/* ─── Noise texture overlay ────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: 256px;
+}
+
+/* ─── Nav ───────────────────────────────────────── */
+nav {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  z-index: 100; width: calc(100% - 48px); max-width: 1160px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  padding: 0.85rem 1.75rem;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: var(--shadow-md);
+}
+.nav-logo {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 1.35rem; font-weight: 700;
+  color: var(--brown-d); text-decoration: none; letter-spacing: -0.3px;
+}
+.nav-logo span { color: var(--teal); }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a {
+  text-decoration: none; font-size: 0.875rem; font-weight: 500;
+  color: var(--text-2); transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--teal); }
+.nav-right { display: flex; align-items: center; gap: 0.75rem; }
+.nav-cart {
+  background: var(--teal); color: white;
+  padding: 0.5rem 1.25rem; border-radius: 999px;
+  font-size: 0.82rem; font-weight: 600; text-decoration: none;
+  transition: background 0.2s, transform 0.15s;
+}
+.nav-cart:hover { background: var(--teal-d); transform: translateY(-1px); }
+
+/* ─── Page ──────────────────────────────────────── */
+.page { max-width: 1200px; margin: 0 auto; padding: 112px 24px 64px; position: relative; z-index: 1; }
+
+/* ─── Bento Grid ────────────────────────────────── */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: minmax(60px, auto);
+  gap: 14px;
+}
+
+/* ─── Glass Card Base ───────────────────────────── */
+.card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ─── Hero Card ─────────────────────────────────── */
+.card-hero {
+  grid-column: span 7;
+  grid-row: span 5;
+  background: var(--brown-d);
+  padding: 3rem 3rem 2.5rem;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  position: relative;
+  overflow: hidden;
+  min-height: 420px;
+}
+.card-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 70% 30%, rgba(46,139,122,0.25) 0%, transparent 65%),
+              radial-gradient(ellipse at 20% 80%, rgba(196,106,58,0.2) 0%, transparent 55%);
+}
+.card-hero-img {
+  position: absolute; inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=900&auto=format&fit=crop&q=80');
+  background-size: cover; background-position: center;
+  opacity: 0.45;
+}
+.card-hero-content { position: relative; z-index: 2; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(46,139,122,0.3); border: 1px solid rgba(46,139,122,0.5);
+  color: #7FCEBC; font-size: 0.72rem; font-weight: 600;
+  padding: 0.35rem 1rem; border-radius: 999px;
+  margin-bottom: 1.25rem; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.hero-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #7FCEBC; }
+.card-hero h1 {
+  font-size: clamp(2.2rem, 4vw, 3.6rem); font-weight: 700;
+  color: #FAF8F3; line-height: 1.05; letter-spacing: -1.5px;
+  margin-bottom: 1rem;
+}
+.card-hero h1 em { font-style: normal; color: #7FCEBC; }
+.card-hero p {
+  font-size: 1rem; color: rgba(250,248,243,0.65);
+  line-height: 1.7; max-width: 400px; margin-bottom: 1.75rem;
+}
+.hero-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.btn-primary {
+  background: var(--teal); color: white;
+  padding: 0.78rem 1.9rem; border-radius: 999px;
+  font-size: 0.9rem; font-weight: 600; text-decoration: none;
+  transition: background 0.2s, transform 0.15s;
+  border: none; cursor: pointer; display: inline-block;
+}
+.btn-primary:hover { background: var(--teal-d); transform: translateY(-2px); }
+.btn-ghost {
+  background: rgba(250,248,243,0.1);
+  border: 1px solid rgba(250,248,243,0.25); color: rgba(250,248,243,0.85);
+  padding: 0.78rem 1.9rem; border-radius: 999px;
+  font-size: 0.9rem; font-weight: 500; text-decoration: none;
+  transition: all 0.2s; display: inline-block;
+}
+.btn-ghost:hover { background: rgba(250,248,243,0.18); }
+
+/* ─── Stat Cards ────────────────────────────────── */
+.card-stat {
+  grid-column: span 5;
+  padding: 1.75rem 1.75rem;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.card-stat-top { display: flex; align-items: flex-start; justify-content: space-between; }
+.stat-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+}
+.stat-icon.teal { background: var(--teal-l); }
+.stat-icon.rust { background: var(--rust-l); }
+.stat-badge {
+  font-size: 0.7rem; font-weight: 600; padding: 3px 10px;
+  border-radius: 999px; letter-spacing: 0.04em;
+}
+.stat-badge.up { background: var(--teal-l); color: var(--teal-d); }
+.stat-badge.hot { background: var(--rust-l); color: #8B3A18; }
+.stat-num {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 2.8rem; font-weight: 700;
+  color: var(--text); letter-spacing: -1.5px; line-height: 1;
+  margin-top: 0.9rem;
+}
+.stat-label { font-size: 0.82rem; color: var(--text-3); margin-top: 4px; font-weight: 500; }
+
+/* ─── Product Cards ─────────────────────────────── */
+.card-product {
+  grid-column: span 3;
+  padding: 0;
+  display: flex; flex-direction: column;
+}
+.card-product:nth-child(n) { grid-row: span 4; }
+.product-img {
+  height: 170px; overflow: hidden; flex-shrink: 0;
+  position: relative; background: var(--sand-1);
+}
+.product-img img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.5s cubic-bezier(.22,.68,0,1.2);
+}
+.card-product:hover .product-img img { transform: scale(1.07); }
+.product-badge {
+  position: absolute; top: 12px; left: 12px;
+  font-size: 0.67rem; font-weight: 700; padding: 4px 11px;
+  border-radius: 999px; color: white; letter-spacing: 0.04em;
+}
+.product-body { padding: 1.1rem 1.2rem 1.25rem; flex: 1; display: flex; flex-direction: column; }
+.product-name { font-family: 'Clash Display', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.product-desc { font-size: 0.78rem; color: var(--text-3); line-height: 1.55; flex: 1; margin-bottom: 1rem; }
+.product-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.product-price { font-family: 'Clash Display', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--text); }
+.product-was { font-size: 0.72rem; color: var(--text-3); text-decoration: line-through; font-weight: 400; margin-left: 4px; }
+.btn-add {
+  background: var(--brown-d); color: var(--ivory);
+  border: none; border-radius: 999px;
+  padding: 0.42rem 1.1rem; font-size: 0.75rem; font-weight: 600;
+  cursor: pointer; transition: background 0.2s, transform 0.15s;
+  white-space: nowrap; font-family: 'Instrument Sans', sans-serif;
+}
+.btn-add:hover { background: var(--teal); transform: scale(1.05); }
+.btn-add.added { background: var(--teal); }
+
+/* ─── Animal Photo Cards ─────────────────────────── */
+.card-animal {
+  grid-column: span 3;
+  grid-row: span 4;
+  padding: 0; position: relative; overflow: hidden;
+  min-height: 260px;
+}
+.card-animal img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.5s cubic-bezier(.22,.68,0,1.2);
+}
+.card-animal:hover img { transform: scale(1.06); }
+.animal-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(to top, rgba(42,31,20,0.75) 0%, transparent 100%);
+  padding: 2rem 1.25rem 1.2rem;
+  display: flex; align-items: flex-end; justify-content: space-between;
+}
+.animal-name { font-family: 'Clash Display', sans-serif; font-size: 1.05rem; font-weight: 700; color: #FAF8F3; }
+.animal-tag { font-size: 0.7rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: rgba(250,248,243,0.2); border: 1px solid rgba(250,248,243,0.3); color: rgba(250,248,243,0.9); }
+
+/* ─── Promo Banner Card ──────────────────────────── */
+.card-promo {
+  grid-column: span 8;
+  background: var(--teal-d);
+  padding: 2.25rem 2.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1.5rem; flex-wrap: wrap;
+}
+.card-promo::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 90% 50%, rgba(46,139,122,0.6) 0%, transparent 60%);
+  pointer-events: none;
+}
+.card-promo h3 {
+  font-size: 1.55rem; font-weight: 700;
+  color: #FAF8F3; letter-spacing: -0.4px;
+  position: relative;
+}
+.card-promo p { font-size: 0.88rem; color: rgba(212,239,235,0.8); margin-top: 5px; position: relative; }
+.promo-code {
+  background: rgba(250,248,243,0.12); border: 1px dashed rgba(212,239,235,0.5);
+  padding: 0.55rem 1.2rem; border-radius: 10px;
+  font-size: 0.9rem; font-weight: 700; color: #FAF8F3;
+  letter-spacing: 0.06em; margin-top: 0.85rem;
+  display: inline-block; position: relative;
+}
+.promo-right { position: relative; flex-shrink: 0; }
+.btn-claim {
+  background: #FAF8F3; color: var(--teal-d);
+  padding: 0.82rem 2rem; border-radius: 999px;
+  font-size: 0.9rem; font-weight: 700; text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.2s;
+  display: inline-block; white-space: nowrap;
+}
+.btn-claim:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+
+/* ─── Trust Card ────────────────────────────────── */
+.card-trust {
+  grid-column: span 4;
+  padding: 1.75rem;
+}
+.trust-item { display: flex; align-items: flex-start; gap: 12px; }
+.trust-item + .trust-item { margin-top: 1.1rem; padding-top: 1.1rem; border-top: 1px solid var(--glass-border); }
+.trust-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.trust-dot.teal { background: var(--teal); }
+.trust-dot.rust { background: var(--rust); }
+.trust-title { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+.trust-desc { font-size: 0.78rem; color: var(--text-3); line-height: 1.55; margin-top: 2px; }
+
+/* ─── Review Cards ──────────────────────────────── */
+.card-review {
+  grid-column: span 4;
+  padding: 1.5rem 1.6rem;
+}
+.review-stars { color: var(--rust); font-size: 0.85rem; margin-bottom: 0.65rem; }
+.review-text { font-size: 0.83rem; color: var(--text-2); line-height: 1.65; font-style: italic; margin-bottom: 1rem; }
+.review-author { display: flex; align-items: center; gap: 10px; }
+.review-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; color: white; flex-shrink: 0;
+}
+.review-name { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+.review-pet { font-size: 0.71rem; color: var(--text-3); }
+
+/* ─── Category Strip ────────────────────────────── */
+.card-cats {
+  grid-column: span 12;
+  padding: 1.5rem 1.75rem;
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+}
+.cat-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--sand-0); border: 1px solid var(--sand-2);
+  padding: 0.55rem 1.2rem; border-radius: 999px;
+  font-size: 0.82rem; font-weight: 500; color: var(--brown);
+  cursor: pointer; text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.cat-pill:hover { background: var(--teal-l); border-color: var(--teal); color: var(--teal-d); transform: translateY(-2px); }
+.cat-pill.active { background: var(--teal-l); border-color: var(--teal); color: var(--teal-d); }
+.cat-pill span { font-size: 1rem; }
+
+/* ─── Section heading ───────────────────────────── */
+.section-head { grid-column: span 12; padding: 1.5rem 0 0.5rem; display: flex; align-items: flex-end; justify-content: space-between; }
+.section-head h2 { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+.section-head a { font-size: 0.83rem; color: var(--teal); text-decoration: none; font-weight: 600; border: 1px solid var(--teal); padding: 0.4rem 1rem; border-radius: 999px; transition: all 0.2s; }
+.section-head a:hover { background: var(--teal); color: white; }
+.eyebrow { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); margin-bottom: 0.35rem; }
+
+/* ─── Wide photo card ───────────────────────────── */
+.card-wide-photo {
+  grid-column: span 6;
+  grid-row: span 4;
+  position: relative; overflow: hidden; min-height: 300px;
+}
+.card-wide-photo img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.5s;
+}
+.card-wide-photo:hover img { transform: scale(1.04); }
+.wide-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(42,31,20,0.7) 0%, rgba(42,31,20,0.2) 60%, transparent 100%);
+  padding: 2rem;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.wide-overlay h3 { font-family: 'Clash Display', sans-serif; font-size: 1.5rem; font-weight: 700; color: #FAF8F3; margin-bottom: 0.4rem; }
+.wide-overlay p { font-size: 0.85rem; color: rgba(250,248,243,0.75); line-height: 1.6; max-width: 280px; }
+
+/* ─── Marquee ───────────────────────────────────── */
+.marquee-wrap { grid-column: span 12; overflow: hidden; padding: 0.5rem 0; }
+.marquee-track { display: flex; gap: 1.5rem; white-space: nowrap; animation: marquee 24s linear infinite; }
+.marquee-track span { font-size: 0.8rem; font-weight: 500; color: var(--text-3); }
+.marquee-track .sep { color: var(--sand-3); }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ─── Footer ────────────────────────────────────── */
+footer {
+  max-width: 1200px; margin: 2rem auto 0; padding: 2.5rem 24px 2rem;
+  border-top: 1px solid var(--sand-1);
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2rem;
+  position: relative; z-index: 1;
+}
+.ft-logo { font-family: 'Clash Display', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--brown-d); text-decoration: none; }
+.ft-logo span { color: var(--teal); }
+.ft-desc { font-size: 0.8rem; color: var(--text-3); line-height: 1.65; margin-top: 0.6rem; max-width: 210px; }
+.ft-col h4 { font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 0.9rem; letter-spacing: 0.02em; }
+.ft-col a { display: block; font-size: 0.79rem; color: var(--text-3); text-decoration: none; margin-bottom: 0.5rem; transition: color 0.2s; }
+.ft-col a:hover { color: var(--teal); }
+.ft-bottom {
+  max-width: 1200px; margin: 0 auto; padding: 1rem 24px 2rem;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.74rem; color: var(--text-3); position: relative; z-index: 1;
+}
+
+/* ─── Responsive ────────────────────────────────── */
+@media (max-width: 900px) {
+  .card-hero { grid-column: span 12; }
+  .card-stat { grid-column: span 6; }
+  .card-product { grid-column: span 6; }
+  .card-animal { grid-column: span 6; }
+  .card-promo { grid-column: span 12; }
+  .card-trust { grid-column: span 12; }
+  .card-review { grid-column: span 6; }
+  .card-wide-photo { grid-column: span 12; }
+  footer { grid-template-columns: 1fr 1fr; }
+  nav .nav-links { display: none; }
+}
+@media (max-width: 600px) {
+  .card-product, .card-animal, .card-review, .card-stat { grid-column: span 12; }
+}
+
+/* ─── Fade-in animation ─────────────────────────── */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+.bento > * { animation: fadeUp 0.6s ease both; }
+.bento > *:nth-child(1)  { animation-delay: 0.05s; }
+.bento > *:nth-child(2)  { animation-delay: 0.10s; }
+.bento > *:nth-child(3)  { animation-delay: 0.12s; }
+.bento > *:nth-child(4)  { animation-delay: 0.15s; }
+.bento > *:nth-child(5)  { animation-delay: 0.18s; }
+.bento > *:nth-child(6)  { animation-delay: 0.20s; }
+.bento > *:nth-child(7)  { animation-delay: 0.22s; }
+.bento > *:nth-child(8)  { animation-delay: 0.24s; }
+.bento > *:nth-child(9)  { animation-delay: 0.26s; }
+.bento > *:nth-child(10) { animation-delay: 0.28s; }
+.bento > *:nth-child(11) { animation-delay: 0.30s; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#"><span>Pet</span>Joy</a>
+  <ul class="nav-links">
+    <li><a href="#shop">Shop</a></li>
+    <li><a href="#animals">Animals</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="#shop" class="nav-cart">Cart (0)</a>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<main class="page">
+  <div class="bento">
+
+    <!-- HERO -->
+    <div class="card card-hero">
+      <div class="card-hero-img"></div>
+      <div class="card-hero-content">
+        <div class="hero-eyebrow">New Collection 2026</div>
+        <h1>Everything your<br>pet truly <em>loves</em></h1>
+        <p>High-quality supplies for cats and dogs — from interactive toys to smart feeders — all at prices that make tails wag.</p>
+        <div class="hero-btns">
+          <a href="#shop" class="btn-primary">Shop Now</a>
+          <a href="#animals" class="btn-ghost">Explore Pets</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAT 1 -->
+    <div class="card card-stat">
+      <div class="card-stat-top">
+        <div class="stat-icon teal">🐾</div>
+        <div class="stat-badge up">+24% this month</div>
+      </div>
+      <div class="stat-num">10K+</div>
+      <div class="stat-label">Happy pet families across the US</div>
+    </div>
+
+    <!-- STAT 2 -->
+    <div class="card card-stat">
+      <div class="card-stat-top">
+        <div class="stat-icon rust">★</div>
+        <div class="stat-badge hot">Top Rated</div>
+      </div>
+      <div class="stat-num">4.9</div>
+      <div class="stat-label">Average rating across 10,000+ reviews</div>
+    </div>
+
+    <!-- CATEGORY PILLS -->
+    <div class="card card-cats" id="shop">
+      <a href="#" class="cat-pill active"><span>🧸</span> All Products</a>
+      <a href="#" class="cat-pill"><span>🪮</span> Grooming</a>
+      <a href="#" class="cat-pill"><span>🍽️</span> Feeding</a>
+      <a href="#" class="cat-pill"><span>💧</span> Hydration</a>
+      <a href="#" class="cat-pill"><span>🛏️</span> Comfort</a>
+      <a href="#" class="cat-pill"><span>🦮</span> Walking</a>
+      <a href="#" class="cat-pill"><span>🐱</span> Cats</a>
+      <a href="#" class="cat-pill"><span>🐶</span> Dogs</a>
+    </div>
+
+    <!-- SECTION HEADING: PRODUCTS -->
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Bestsellers</div>
+        <h2>Most-loved products</h2>
+      </div>
+      <a href="#">View all →</a>
+    </div>
+
+    <!-- PRODUCT CARDS (8 products) -->
+    <div class="card card-product">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1615147342761-9238e15d8b96?w=400&auto=format&fit=crop&q=80" alt="Interactive Cat Toy" loading="lazy"/>
+        <div class="product-badge" style="background:#C46A3A;">Bestseller</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name">Interactive Cat Toy</div>
+        <div class="product-desc">2-in-1 laser + feather wand. Three difficulty levels to keep cats engaged.</div>
+        <div class="product-foot">
+          <div><span class="product-price">$14.99</span><span class="product-was">$22.99</span></div>
+          <button class="btn-add" onclick="addToCart(this)">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-product">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&auto=format&fit=crop&q=80" alt="Grooming Glove" loading="lazy"/>
+        <div class="product-badge" style="background:#C46A3A;">Sale</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name">Pet Grooming Glove</div>
+        <div class="product-desc">Gentle deshedding mitt for dogs & cats. Feels like a massage to them.</div>
+        <div class="product-foot">
+          <div><span class="product-price">$12.99</span><span class="product-was">$18.99</span></div>
+          <button class="btn-add" onclick="addToCart(this)">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-product">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1541364983171-a8ba01e95cfc?w=400&auto=format&fit=crop&q=80" alt="Cat Water Fountain" loading="lazy"/>
+        <div class="product-badge" style="background:#2E8B7A;">New</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name">Cat Water Fountain</div>
+        <div class="product-desc">2.8L filtered fountain with quiet motor. Fresh flowing water 24/7.</div>
+        <div class="product-foot">
+          <div><span class="product-price">$34.99</span><span class="product-was">$44.99</span></div>
+          <button class="btn-add" onclick="addToCart(this)">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-product">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?w=400&auto=format&fit=crop&q=80" alt="Lick Mat" loading="lazy"/>
+        <div class="product-badge" style="background:#6B4C30;">Top Rated</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name">Lick Mat Set (×2)</div>
+        <div class="product-desc">Two silicone textures. Soothes anxious pets and slows fast eaters.</div>
+        <div class="product-foot">
+          <div><span class="product-price">$13.99</span><span class="product-was">$19.99</span></div>
+          <button class="btn-add" onclick="addToCart(this)">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-product">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=400&auto=format&fit=crop&q=80" alt="Dog Cooling Mat" loading="lazy"/>
+        <div class="product-badge" style="background:#C46A3A;">Sale</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name">Dog Cooling Mat</div>
+        <div class="product-desc">Self-cooling gel pad. Foldable and lightweight. Perfect for summer days.</div>
+        <div class="product-foot">
+          <div><span class="product-price">$24.99</span><span class="product-was">$32.99</span></div>
+          <button class="btn-add" onclick="addToCart(this)">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-product">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400&auto=format&fit=crop&q=80" alt="Automatic Feeder" loading="lazy"/>
+        <div class="product-badge" style="background:#2E8B7A;">New</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name">Automatic Feeder</div>
+        <div class="product-desc">6-meal timed portions with app control. Never miss a mealtime again.</div>
+        <div class="product-foot">
+          <div><span class="product-price">$49.99</span><span class="product-was">$64.99</span></div>
+          <button class="btn-add" onclick="addToCart(this)">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-product">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=400&auto=format&fit=crop&q=80" alt="Travel Water Bottle" loading="lazy"/>
+        <div class="product-badge" style="background:#6B4C30;">Top Rated</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name">Travel Water Bottle</div>
+        <div class="product-desc">Leak-proof portable bottle with built-in bowl. Ideal for walks and trips.</div>
+        <div class="product-foot">
+          <div><span class="product-price">$16.99</span><span class="product-was">$24.99</span></div>
+          <button class="btn-add" onclick="addToCart(this)">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-product">
+      <div class="product-img">
+        <img src="https://images.unsplash.com/photo-1559715745-e1b33a271c8f?w=400&auto=format&fit=crop&q=80" alt="Auto Laser Toy" loading="lazy"/>
+        <div class="product-badge" style="background:#C46A3A;">Hot</div>
+      </div>
+      <div class="product-body">
+        <div class="product-name">Auto Laser Toy</div>
+        <div class="product-desc">Rotating laser with 3-speed modes and auto shut-off after 10 minutes.</div>
+        <div class="product-foot">
+          <div><span class="product-price">$19.99</span><span class="product-was">$29.99</span></div>
+          <button class="btn-add" onclick="addToCart(this)">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANIMALS SECTION HEADING -->
+    <div class="section-head" id="animals">
+      <div>
+        <div class="eyebrow">Our Furry Friends</div>
+        <h2>Shop by pet</h2>
+      </div>
+      <a href="#">See all →</a>
+    </div>
+
+    <!-- WIDE PHOTO: DOGS -->
+    <div class="card card-wide-photo">
+      <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&auto=format&fit=crop&q=80" alt="Happy dog" loading="lazy"/>
+      <div class="wide-overlay">
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(250,248,243,0.65);margin-bottom:0.5rem;">For Dogs</div>
+        <h3>Toys, beds & everything in between</h3>
+        <p>From cooling mats to automatic feeders — give your dog the life they deserve.</p>
+        <a href="#shop" class="btn-primary" style="margin-top:1rem;display:inline-block;">Shop Dog Supplies</a>
+      </div>
+    </div>
+
+    <!-- ANIMAL PHOTO GRID -->
+    <div class="card card-animal">
+      <img src="https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=500&auto=format&fit=crop&q=80" alt="Golden Retriever" loading="lazy"/>
+      <div class="animal-label">
+        <div class="animal-name">Golden Retriever</div>
+        <div class="animal-tag">Dogs</div>
+      </div>
+    </div>
+
+    <div class="card card-animal">
+      <img src="https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=500&auto=format&fit=crop&q=80" alt="Tabby Cat" loading="lazy"/>
+      <div class="animal-label">
+        <div class="animal-name">Tabby Cat</div>
+        <div class="animal-tag">Cats</div>
+      </div>
+    </div>
+
+    <div class="card card-animal">
+      <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=500&auto=format&fit=crop&q=80" alt="Labrador" loading="lazy"/>
+      <div class="animal-label">
+        <div class="animal-name">Labrador</div>
+        <div class="animal-tag">Dogs</div>
+      </div>
+    </div>
+
+    <!-- WIDE PHOTO: CATS -->
+    <div class="card card-wide-photo">
+      <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&auto=format&fit=crop&q=80" alt="Happy cat" loading="lazy"/>
+      <div class="wide-overlay">
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(250,248,243,0.65);margin-bottom:0.5rem;">For Cats</div>
+        <h3>Fountains, wands & cozy nooks</h3>
+        <p>Cats are curious, playful and picky. Our range is designed to make them purr.</p>
+        <a href="#shop" class="btn-primary" style="margin-top:1rem;display:inline-block;">Shop Cat Supplies</a>
+      </div>
+    </div>
+
+    <!-- MARQUEE -->
+    <div class="marquee-wrap">
+      <div class="marquee-track">
+        <span>Interactive Toys</span><span class="sep"> · </span>
+        <span>Grooming Gloves</span><span class="sep"> · </span>
+        <span>Water Fountains</span><span class="sep"> · </span>
+        <span>Lick Mats</span><span class="sep"> · </span>
+        <span>Cooling Mats</span><span class="sep"> · </span>
+        <span>Automatic Feeders</span><span class="sep"> · </span>
+        <span>Cozy Beds</span><span class="sep"> · </span>
+        <span>Paw Cleaners</span><span class="sep"> · </span>
+        <span>Travel Bottles</span><span class="sep"> · </span>
+        <span>Leashes & Leads</span><span class="sep"> · </span>
+        <span>Interactive Toys</span><span class="sep"> · </span>
+        <span>Grooming Gloves</span><span class="sep"> · </span>
+        <span>Water Fountains</span><span class="sep"> · </span>
+        <span>Lick Mats</span><span class="sep"> · </span>
+        <span>Cooling Mats</span><span class="sep"> · </span>
+        <span>Automatic Feeders</span><span class="sep"> · </span>
+        <span>Cozy Beds</span><span class="sep"> · </span>
+        <span>Paw Cleaners</span><span class="sep"> · </span>
+        <span>Travel Bottles</span><span class="sep"> · </span>
+        <span>Leashes & Leads</span><span class="sep"> · </span>
+      </div>
+    </div>
+
+    <!-- PROMO BANNER -->
+    <div class="card card-promo" style="position:relative;">
+      <div>
+        <h3>First order? 15% off everything.</h3>
+        <p>Join thousands of happy pet parents across the US.</p>
+        <div class="promo-code">PETJOY15</div>
+      </div>
+      <div class="promo-right">
+        <a href="#shop" class="btn-claim">Claim Discount</a>
+      </div>
+    </div>
+
+    <!-- TRUST CARD -->
+    <div class="card card-trust">
+      <div class="trust-item">
+        <div class="trust-dot teal"></div>
+        <div><div class="trust-title">Free US shipping over $35</div><div class="trust-desc">Most orders dispatched within 1 business day from our warehouse.</div></div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-dot teal"></div>
+        <div><div class="trust-title">Vet-reviewed products</div><div class="trust-desc">Every item passes a safety and quality check before we stock it.</div></div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-dot rust"></div>
+        <div><div class="trust-title">30-day hassle-free returns</div><div class="trust-desc">Not happy? Return it. No questions, no drama, full refund.</div></div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-dot rust"></div>
+        <div><div class="trust-title">Real human support</div><div class="trust-desc">We reply within hours — not days. Friendly people who actually care.</div></div>
+      </div>
+    </div>
+
+    <!-- REVIEWS SECTION -->
+    <div class="section-head" id="reviews">
+      <div>
+        <div class="eyebrow">Customer Reviews</div>
+        <h2>What pet parents are saying</h2>
+      </div>
+    </div>
+
+    <div class="card card-review">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"My golden goes absolutely crazy for the puzzle toy. Finally something that actually tires him out after a long walk!"</p>
+      <div class="review-author">
+        <div class="review-avatar" style="background:#2E8B7A">SL</div>
+        <div><div class="review-name">Sarah L.</div><div class="review-pet">Golden Retriever mom · Texas</div></div>
+      </div>
+    </div>
+
+    <div class="card card-review">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"The water fountain is so quiet. My two cats actually started drinking more water — the vet is very happy about that."</p>
+      <div class="review-author">
+        <div class="review-avatar" style="background:#C46A3A">MK</div>
+        <div><div class="review-name">Marcus K.</div><div class="review-pet">Cat dad of 2 · California</div></div>
+      </div>
+    </div>
+
+    <div class="card card-review">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"Ordered the lick mat and grooming glove — both shipped in one day. My rescue dog is obsessed and so much calmer now."</p>
+      <div class="review-author">
+        <div class="review-avatar" style="background:#6B4C30">JR</div>
+        <div><div class="review-name">Jamie R.</div><div class="review-pet">Rescue dog parent · New York</div></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer id="about">
+  <div>
+    <a class="ft-logo" href="#"><span>Pet</span>Joy</a>
+    <p class="ft-desc">Happy Pets, Happy Life. Affordable, high-quality supplies for dogs and cats — shipped with care across the US.</p>
+  </div>
+  <div class="ft-col">
+    <h4>Shop</h4>
+    <a href="#">All Products</a>
+    <a href="#">Dogs</a>
+    <a href="#">Cats</a>
+    <a href="#">On Sale</a>
+    <a href="#">New Arrivals</a>
+  </div>
+  <div class="ft-col">
+    <h4>Help</h4>
+    <a href="#">Shipping Info</a>
+    <a href="#">Returns</a>
+    <a href="#">FAQ</a>
+    <a href="#">Contact Us</a>
+  </div>
+  <div class="ft-col">
+    <h4>Company</h4>
+    <a href="#">About PetJoy</a>
+    <a href="#">Blog</a>
+    <a href="#">Privacy Policy</a>
+    <a href="#">Terms of Service</a>
+  </div>
+</footer>
+<div class="ft-bottom">
+  <span>© 2026 PetJoy. All rights reserved.</span>
+  <span>Made with love for pet families everywhere</span>
+</div>
+
+<script>
+let cartCount = 0;
+const cartEl = document.querySelector('.nav-cart');
+function addToCart(btn) {
+  cartCount++;
+  cartEl.textContent = 'Cart (' + cartCount + ')';
+  btn.textContent = 'Added ✓';
+  btn.classList.add('added');
+  setTimeout(() => { btn.textContent = 'Add'; btn.classList.remove('added'); }, 2000);
+}
+document.querySelectorAll('.cat-pill').forEach(pill => {
+  pill.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
